@@ -3,6 +3,7 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "public/game.html"), "utf8");
+const emberCount = (html.match(/class="ember"/g) || []).length;
 
 const requiredAssets = [
   "public/assets/camp-game/main/camp.png",
@@ -24,6 +25,7 @@ const checks = [
   ["main scene uses camp asset", /assets\/camp-game\/main\/camp\.png/.test(html)],
   ["main scene uses separate fire assets", /fire_big\.png/.test(html) && /fire_low\.png/.test(html) && /fire_out\.png/.test(html)],
   ["fire has ember animation effect", /fire-embers/.test(html) && /emberFloat/.test(html)],
+  ["fire renders many embers when lit", emberCount >= 12],
   ["fire uses fixed visual frame", /fire-frame/.test(html) && !/--fire-size/.test(html)],
   ["fire image itself is not animated", !/\.fire-sprite\s*\{[^}]*animation\s*:/s.test(html) && !/firePulse|emberDrift/.test(html)],
   ["radio uses one image asset", /radio\.png/.test(html) && !/radio_on\.png|radio_off\.png/.test(html)],
