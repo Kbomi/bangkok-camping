@@ -232,7 +232,7 @@
           opacity 200ms ease;
       }
 
-      .tap-object:active .object-img {
+      .tap-object:active:not(.fire-object) .object-img {
         transform: scale(0.97);
       }
 
@@ -244,6 +244,7 @@
       }
 
       .fire-frame {
+        position: relative;
         width: 100%;
         height: 100%;
         display: grid;
@@ -259,38 +260,64 @@
           drop-shadow(
             0 0 28px rgba(255, 129, 44, calc(0.58 * var(--fire-bright, 1)))
           );
-        animation: firePulse 1.25s ease-in-out infinite alternate;
-      }
-
-      .fire-low .fire-sprite {
-        animation: emberDrift 900ms ease-in-out infinite alternate;
       }
 
       .fire-out .fire-sprite {
-        animation: none;
         filter: brightness(0.72) contrast(1.04)
           drop-shadow(0 8px 14px rgba(0, 0, 0, 0.46));
       }
 
-      @keyframes firePulse {
-        from {
-          transform: translateY(1px) scale(0.995);
-          opacity: 0.92;
-        }
-        to {
-          transform: translateY(-1px) scale(1.005);
-          opacity: 1;
-        }
+      .fire-embers {
+        position: absolute;
+        z-index: 2;
+        inset: 10% 18% 20%;
+        pointer-events: none;
+        mix-blend-mode: screen;
       }
 
-      @keyframes emberDrift {
-        from {
-          transform: translateY(1px) rotate(-0.4deg) scale(0.995);
-          opacity: 0.78;
+      .fire-embers span {
+        position: absolute;
+        left: var(--x);
+        bottom: var(--y);
+        width: var(--size);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 245, 170, 0.98) 0 22%,
+          rgba(255, 139, 38, 0.86) 45%,
+          transparent 72%
+        );
+        box-shadow:
+          0 0 9px rgba(255, 174, 60, 0.72),
+          0 0 17px rgba(255, 92, 30, 0.4);
+        opacity: 0;
+        animation: emberFloat var(--duration) ease-out infinite;
+        animation-delay: var(--delay);
+      }
+
+      .fire-low .fire-embers {
+        opacity: 0.58;
+      }
+
+      .fire-out .fire-embers {
+        display: none;
+      }
+
+      @keyframes emberFloat {
+        0% {
+          transform: translate3d(0, 0, 0) scale(0.6);
+          opacity: 0;
         }
-        to {
-          transform: translateY(-1px) rotate(0.4deg) scale(1.005);
-          opacity: 0.96;
+        18% {
+          opacity: 0.95;
+        }
+        74% {
+          opacity: 0.62;
+        }
+        100% {
+          transform: translate3d(var(--drift), -74px, 0) scale(0.24);
+          opacity: 0;
         }
       }
 
@@ -759,6 +786,58 @@
               alt=""
               draggable="false"
             />
+            <span class="fire-embers" aria-hidden="true">
+              <span
+                style="
+                  --x: 44%;
+                  --y: 24%;
+                  --size: 7px;
+                  --drift: -18px;
+                  --duration: 1.85s;
+                  --delay: -0.2s;
+                "
+              ></span>
+              <span
+                style="
+                  --x: 52%;
+                  --y: 20%;
+                  --size: 5px;
+                  --drift: 14px;
+                  --duration: 2.15s;
+                  --delay: -0.85s;
+                "
+              ></span>
+              <span
+                style="
+                  --x: 60%;
+                  --y: 28%;
+                  --size: 4px;
+                  --drift: 24px;
+                  --duration: 1.7s;
+                  --delay: -1.1s;
+                "
+              ></span>
+              <span
+                style="
+                  --x: 38%;
+                  --y: 30%;
+                  --size: 4px;
+                  --drift: -10px;
+                  --duration: 2.35s;
+                  --delay: -1.65s;
+                "
+              ></span>
+              <span
+                style="
+                  --x: 55%;
+                  --y: 34%;
+                  --size: 6px;
+                  --drift: 8px;
+                  --duration: 2s;
+                  --delay: -1.35s;
+                "
+              ></span>
+            </span>
           </span>
           <span class="label">모닥불</span>
         </button>
