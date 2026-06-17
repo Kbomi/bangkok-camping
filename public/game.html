@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#050812" />
+    <title>방콕 캠핑</title>
+    <style>
+      :root {
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+        --ink: #fff4df;
+        --muted: rgba(255, 244, 223, 0.7);
+        --panel: rgba(8, 13, 24, 0.8);
+        --line: rgba(255, 255, 255, 0.14);
+        --accent: #ffb85f;
+        --pants: #8b6c50;
+        --shoe: #a96835;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #050812;
+        color: var(--ink);
+      }
+
+      button {
+        border: 0;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .app {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            circle at 50% 55%,
+            rgba(98, 50, 27, 0.42),
+            transparent 34%
+          ),
+          radial-gradient(
+            circle at 50% 0%,
+            rgba(16, 45, 78, 0.52),
+            transparent 44%
+          ),
+          #050812;
+        touch-action: manipulation;
+        user-select: none;
+      }
+
+      .hud {
+        position: fixed;
+        z-index: 30;
+        top: calc(10px + var(--safe-top));
+        left: 12px;
+        right: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        pointer-events: none;
+      }
+
+      .pill,
+      .icon-btn {
+        min-height: 38px;
+        border-radius: 999px;
+        background: rgba(6, 11, 21, 0.74);
+        border: 1px solid var(--line);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(14px);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 13px;
+        font-weight: 900;
+      }
+
+      .hud-actions {
+        display: flex;
+        gap: 8px;
+        pointer-events: auto;
+      }
+
+      .icon-btn {
+        width: 42px;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+      }
+
+      .stage {
+        position: relative;
+        width: min(100vw, calc((100vh - 36px) * 16 / 9));
+        max-width: 1100px;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: #0a1020;
+        border-radius: clamp(0px, 2vw, 22px);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+      }
+
+      @media (max-width: 640px) {
+        .stage {
+          width: 100vw;
+          border-radius: 0;
+        }
+      }
+
+      .stage img {
+        -webkit-user-drag: none;
+        user-drag: none;
+      }
+
+      .camp-bg,
+      .shade,
+      .horror-static {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .camp-bg {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* filter: brightness(0.53) saturate(0.86) contrast(1.08); */
+      }
+
+      .shade {
+        z-index: 4;
+        background:
+          radial-gradient(
+            circle at 50% 60%,
+            transparent 0 22%,
+            rgba(0, 0, 0, 0.38) 48%,
+            rgba(0, 0, 0, 0.78) 100%
+          ),
+          linear-gradient(rgba(3, 7, 14, 0.14), rgba(3, 7, 14, 0.58));
+        transition: opacity 240ms ease;
+      }
+
+      .lamp-off .shade {
+        opacity: 1;
+        background:
+          radial-gradient(
+            circle at 50% 62%,
+            transparent 0 15%,
+            rgba(0, 0, 0, 0.67) 42%,
+            rgba(0, 0, 0, 0.9) 100%
+          ),
+          linear-gradient(rgba(3, 7, 14, 0.24), rgba(3, 7, 14, 0.72));
+      }
+
+      .horror-static {
+        z-index: 7;
+        opacity: 0;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.05) 0 1px,
+            transparent 1px 6px
+          ),
+          radial-gradient(
+            circle at 18% 28%,
+            rgba(255, 255, 255, 0.1),
+            transparent 5%
+          ),
+          radial-gradient(
+            circle at 79% 38%,
+            rgba(255, 255, 255, 0.08),
+            transparent 4%
+          );
+        mix-blend-mode: screen;
+        animation: staticDrift 260ms linear infinite;
+      }
+
+      .radio-noise .horror-static {
+        opacity: 0.32;
+      }
+
+      @keyframes staticDrift {
+        to {
+          transform: translateY(7px);
+        }
+      }
+
+      .tap-object {
+        position: absolute;
+        z-index: 12;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        background: transparent;
+        border-radius: 18px;
+      }
+
+      .tap-object:focus-visible {
+        outline: 3px solid rgba(255, 225, 172, 0.76);
+        outline-offset: 4px;
+      }
+
+      .object-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.52));
+        transition:
+          filter 200ms ease,
+          transform 200ms ease,
+          opacity 200ms ease;
+      }
+
+      .tap-object:active .object-img {
+        transform: scale(0.97);
+      }
+
+      .fire-object {
+        left: 37%;
+        top: 24%;
+        width: 27%;
+        height: 36%;
+      }
+
+      .fire-frame {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+
+      .fire-sprite {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        mix-blend-mode: multiply;
+        filter: saturate(1.16) contrast(1.04)
+          drop-shadow(
+            0 0 28px rgba(255, 129, 44, calc(0.58 * var(--fire-bright, 1)))
+          );
+        animation: firePulse 1.25s ease-in-out infinite alternate;
+      }
+
+      .fire-low .fire-sprite {
+        animation: emberDrift 900ms ease-in-out infinite alternate;
+      }
+
+      .fire-out .fire-sprite {
+        animation: none;
+        filter: brightness(0.72) contrast(1.04)
+          drop-shadow(0 8px 14px rgba(0, 0, 0, 0.46));
+      }
+
+      @keyframes firePulse {
+        from {
+          transform: translateY(1px) scale(0.995);
+          opacity: 0.92;
+        }
+        to {
+          transform: translateY(-1px) scale(1.005);
+          opacity: 1;
+        }
+      }
+
+      @keyframes emberDrift {
+        from {
+          transform: translateY(1px) rotate(-0.4deg) scale(0.995);
+          opacity: 0.78;
+        }
+        to {
+          transform: translateY(-1px) rotate(0.4deg) scale(1.005);
+          opacity: 0.96;
+        }
+      }
+
+      .fire-glow {
+        position: absolute;
+        z-index: 5;
+        left: 50%;
+        top: 62%;
+        width: 36%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(
+          circle,
+          rgba(255, 179, 76, calc(0.62 * var(--fire-bright, 1))) 0 12%,
+          rgba(255, 92, 37, calc(0.38 * var(--fire-bright, 1))) 25%,
+          transparent 62%
+        );
+        mix-blend-mode: screen;
+        pointer-events: none;
+        animation: fireBreath 1.3s ease-in-out infinite alternate;
+      }
+
+      .fire-out .fire-glow {
+        opacity: 0.04;
+        animation: none;
+      }
+
+      @keyframes fireBreath {
+        from {
+          transform: translate(-50%, -50%) scale(0.92);
+        }
+        to {
+          transform: translate(-50%, -50%) scale(1.06);
+        }
+      }
+
+      .radio-object {
+        left: 2%;
+        bottom: 7%;
+        width: 30%;
+        height: 28%;
+      }
+
+      .radio-noise .radio-object .object-img {
+        filter: grayscale(0.2) brightness(0.74)
+          drop-shadow(0 0 24px rgba(170, 211, 255, 0.36));
+        /* animation: radioTwitch 700ms steps(2, end) infinite; */
+      }
+
+      @keyframes radioTwitch {
+        50% {
+          transform: translateX(2px) rotate(-1deg);
+        }
+      }
+
+      .radioWhisper {
+        position: absolute;
+        z-index: 13;
+        left: 8%;
+        bottom: 34%;
+        min-width: 106px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(5, 8, 15, 0.72);
+        border: 1px solid rgba(177, 211, 255, 0.18);
+        color: rgba(218, 235, 255, 0.9);
+        font-size: clamp(11px, 2vw, 13px);
+        font-weight: 850;
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 180ms ease,
+          transform 180ms ease;
+        pointer-events: none;
+      }
+
+      .radio-noise .radioWhisper {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .music-notes {
+        position: absolute;
+        z-index: 13;
+        left: 6%;
+        bottom: 18%;
+        width: 27%;
+        height: 24%;
+        pointer-events: none;
+      }
+
+      .radio-noise .music-notes {
+        opacity: 0.16;
+        filter: grayscale(1);
+      }
+
+      .note {
+        position: absolute;
+        color: #ffe8a7;
+        font-size: clamp(16px, 3.2vw, 30px);
+        font-weight: 900;
+        line-height: 1;
+        text-shadow:
+          0 2px 8px rgba(0, 0, 0, 0.56),
+          0 0 12px rgba(255, 202, 106, 0.34);
+        animation: musicFloat 1.55s ease-in-out infinite alternate;
+        animation-delay: var(--delay, 0s);
+      }
+
+      .note:nth-child(1) {
+        left: 56%;
+        top: 4%;
+      }
+
+      .note:nth-child(2) {
+        left: 76%;
+        top: 22%;
+      }
+
+      .note:nth-child(3) {
+        left: 43%;
+        top: 34%;
+      }
+
+      .note:nth-child(4) {
+        left: 86%;
+        top: 52%;
+      }
+
+      .note:nth-child(5) {
+        left: 62%;
+        top: 68%;
+      }
+
+      @keyframes musicFloat {
+        from {
+          transform: translateY(7px) rotate(-5deg) scale(0.96);
+          opacity: 0.78;
+        }
+        to {
+          transform: translateY(-9px) rotate(6deg) scale(1.06);
+          opacity: 1;
+        }
+      }
+
+      .lamp-object {
+        right: 3%;
+        bottom: 14%;
+        width: 18%;
+        height: 54%;
+      }
+
+      .lamp-frame {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .lamp-visual {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-image: var(--lamp-image);
+        background-repeat: no-repeat;
+        background-position: center bottom;
+        background-size: auto 100%;
+        filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.52));
+        transition:
+          filter 200ms ease,
+          opacity 200ms ease;
+      }
+
+      .lamp-flicker .lamp-visual {
+        animation: lampFlicker 560ms steps(2, end) infinite;
+      }
+
+      .lamp-off .lamp-visual {
+        filter: brightness(0.42) saturate(0.72)
+          drop-shadow(0 12px 18px rgba(0, 0, 0, 0.5));
+      }
+
+      .lamp-object .label {
+        bottom: 15px;
+      }
+
+      @keyframes lampFlicker {
+        50% {
+          opacity: 0.52;
+          filter: brightness(0.52) drop-shadow(0 10px 18px rgba(0, 0, 0, 0.5));
+        }
+      }
+
+      .tent-object {
+        right: 11%;
+        top: 18%;
+        width: 26%;
+        height: 48%;
+      }
+
+      .tent-object .object-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center bottom;
+      }
+
+      .tent-zip .tent-object .object-img {
+        filter: brightness(0.95) drop-shadow(0 0 18px rgba(255, 150, 64, 0.22))
+          drop-shadow(0 16px 24px rgba(0, 0, 0, 0.52));
+      }
+
+      .legs {
+        position: absolute;
+        z-index: 16;
+        left: 50%;
+        bottom: -3%;
+        width: min(44%, 420px);
+        height: 30%;
+        transform: translateX(-50%);
+        pointer-events: none;
+      }
+
+      .leg {
+        position: absolute;
+        bottom: 8%;
+        width: 31%;
+        height: 90%;
+        border-radius: 42% 42% 20% 20%;
+        background:
+          linear-gradient(110deg, rgba(255, 255, 255, 0.14), transparent 28%),
+          linear-gradient(
+            var(--pants),
+            color-mix(in srgb, var(--pants), #000 25%)
+          );
+        box-shadow: inset 0 -20px 24px rgba(0, 0, 0, 0.22);
+      }
+
+      .leg.left {
+        left: 9%;
+        transform: rotate(-12deg);
+      }
+
+      .leg.right {
+        right: 9%;
+        transform: rotate(12deg);
+      }
+
+      .shoe {
+        position: absolute;
+        bottom: 1%;
+        width: 34%;
+        height: 34%;
+        border-radius: 46% 46% 26% 26%;
+        background:
+          radial-gradient(
+            circle at 52% 38%,
+            rgba(255, 255, 255, 0.42) 0 3px,
+            transparent 4px
+          ),
+          linear-gradient(
+            140deg,
+            color-mix(in srgb, var(--shoe), #fff 12%),
+            var(--shoe)
+          );
+        box-shadow:
+          inset 0 -8px 12px rgba(0, 0, 0, 0.24),
+          0 10px 16px rgba(0, 0, 0, 0.26);
+      }
+
+      .shoe.left {
+        left: 24%;
+        transform: rotate(-8deg);
+      }
+
+      .shoe.right {
+        right: 24%;
+        transform: rotate(8deg);
+      }
+
+      .status-card {
+        position: absolute;
+        z-index: 22;
+        left: 50%;
+        bottom: calc(14px + var(--safe-bottom));
+        max-width: calc(100% - 24px);
+        padding: 10px 13px;
+        border-radius: 999px;
+        background: rgba(5, 8, 15, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        color: rgba(255, 244, 223, 0.94);
+        font-size: clamp(12px, 2.4vw, 14px);
+        font-weight: 850;
+        transform: translateX(-50%);
+        backdrop-filter: blur(14px);
+        white-space: nowrap;
+      }
+
+      .label {
+        position: absolute;
+        left: 50%;
+        bottom: -12px;
+        padding: 6px 9px;
+        border-radius: 999px;
+        background: rgba(5, 8, 15, 0.74);
+        color: white;
+        font-size: clamp(10px, 1.8vw, 12px);
+        font-weight: 850;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+
+      .flash {
+        animation: flashTap 300ms ease;
+      }
+
+      @keyframes flashTap {
+        50% {
+          filter: brightness(1.16) saturate(1.1);
+        }
+      }
+
+      .modal-layer {
+        position: fixed;
+        z-index: 50;
+        inset: 0;
+        display: none;
+        align-items: end;
+        padding: 14px;
+        padding-bottom: calc(14px + var(--safe-bottom));
+        background: rgba(3, 6, 12, 0.68);
+      }
+
+      .modal-layer.show {
+        display: flex;
+      }
+
+      .modal {
+        width: 100%;
+        max-height: min(78vh, 620px);
+        overflow: auto;
+        border-radius: 24px;
+        background: rgba(12, 18, 31, 0.97);
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        box-shadow: 0 -24px 80px rgba(0, 0, 0, 0.48);
+      }
+
+      .modal-head {
+        position: sticky;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 16px 8px;
+        background: rgba(12, 18, 31, 0.97);
+      }
+
+      .modal-title {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .modal-body {
+        padding: 0 16px 18px;
+      }
+
+      .item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 13px;
+        margin-top: 10px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .item-name {
+        font-weight: 900;
+      }
+
+      .item-desc {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .small-btn {
+        min-height: 38px;
+        padding: 0 13px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.13);
+        font-weight: 900;
+      }
+
+      .small-btn.buy {
+        background: #ffbd69;
+        color: #2b170c;
+      }
+
+      .toast {
+        position: fixed;
+        z-index: 70;
+        left: 50%;
+        bottom: calc(20px + var(--safe-bottom));
+        max-width: calc(100vw - 32px);
+        padding: 10px 13px;
+        border-radius: 999px;
+        background: rgba(5, 8, 15, 0.92);
+        color: white;
+        font-weight: 850;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.36);
+        transform: translate(-50%, 18px);
+        opacity: 0;
+        transition:
+          opacity 180ms ease,
+          transform 180ms ease;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app" class="app horror-night" aria-label="방콕 캠핑 미니게임">
+      <header class="hud">
+        <div class="pill" aria-live="polite">
+          솔방울 <span id="pineCount">5</span>
+        </div>
+        <div class="hud-actions">
+          <button id="bagBtn" class="icon-btn" type="button" aria-label="가방">
+            🎒
+          </button>
+          <button id="shopBtn" class="icon-btn" type="button" aria-label="상점">
+            🛍️
+          </button>
+        </div>
+      </header>
+
+      <section id="stage" class="stage main-scene">
+        <img
+          class="camp-bg"
+          src="assets/camp-game/main/camp.png"
+          alt="어두운 밤의 캠핑장"
+        />
+        <div class="fire-glow" aria-hidden="true"></div>
+
+        <button
+          id="fireObject"
+          class="tap-object fire-object"
+          type="button"
+          data-action="fire"
+          aria-label="모닥불"
+        >
+          <span class="fire-frame">
+            <img
+              id="fireImg"
+              class="object-img fire-sprite"
+              src="assets/camp-game/fire/fire_big.png"
+              alt=""
+              draggable="false"
+            />
+          </span>
+          <span class="label">모닥불</span>
+        </button>
+
+        <button
+          id="radioObject"
+          class="tap-object radio-object"
+          type="button"
+          data-action="radio"
+          aria-label="라디오"
+        >
+          <img
+            id="radioImg"
+            class="object-img"
+            src="assets/camp-game/radio/radio.png"
+            alt=""
+            draggable="false"
+          />
+          <span class="label">라디오</span>
+        </button>
+        <div class="music-notes" aria-hidden="true">
+          <span class="note" style="--delay: -0.1s">♪</span>
+          <span class="note" style="--delay: -0.45s">♫</span>
+          <span class="note" style="--delay: -0.8s">♪</span>
+          <span class="note" style="--delay: -1.05s">♬</span>
+          <span class="note" style="--delay: -1.3s">♪</span>
+        </div>
+        <div class="radioWhisper" aria-hidden="true">지지직... 들려?</div>
+
+        <button
+          id="tentObject"
+          class="tap-object tent-object"
+          type="button"
+          data-action="tent"
+          aria-label="텐트"
+        >
+          <img
+            id="tentImg"
+            class="object-img"
+            src="assets/camp-game/tent/tent_closed.png"
+            alt=""
+            draggable="false"
+          />
+          <span class="label">텐트</span>
+        </button>
+
+        <button
+          id="lampObject"
+          class="tap-object lamp-object"
+          type="button"
+          data-action="lamp"
+          aria-label="랜턴"
+        >
+          <span class="lamp-frame">
+            <span id="lampImg" class="lamp-visual" aria-hidden="true"></span>
+          </span>
+          <span class="label">랜턴</span>
+        </button>
+
+        <div class="legs" aria-hidden="true">
+          <span class="leg left"></span>
+          <span class="leg right"></span>
+          <span class="shoe left"></span>
+          <span class="shoe right"></span>
+        </div>
+
+        <div class="shade"></div>
+        <div class="horror-static"></div>
+        <div id="statusCard" class="status-card">
+          각 요소를 탭해서 밤을 버티세요
+        </div>
+      </section>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <section id="modalLayer" class="modal-layer" aria-hidden="true">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+      >
+        <div class="modal-head">
+          <h2 id="modalTitle" class="modal-title"></h2>
+          <button
+            id="closeModalBtn"
+            class="icon-btn"
+            type="button"
+            aria-label="닫기"
+          >
+            ✕
+          </button>
+        </div>
+        <div id="modalBody" class="modal-body"></div>
+      </div>
+    </section>
+
+    <script>
+      (() => {
+        const STORAGE_KEY = "bangkokCampingTapHorror.v1";
+        const REWARDS = [
+          {
+            id: "pants_cocoa",
+            slot: "pants",
+            name: "코코아 캠핑 팬츠",
+            desc: "따뜻한 기본 하의",
+            price: 0,
+            color: "#8b6c50",
+          },
+          {
+            id: "pants_denim",
+            slot: "pants",
+            name: "데님 하프 팬츠",
+            desc: "불빛에 잘 어울리는 푸른 하의",
+            price: 12,
+            color: "#4d6f94",
+          },
+          {
+            id: "pants_cargo",
+            slot: "pants",
+            name: "카고 조거 팬츠",
+            desc: "캠핑장에 잘 맞는 올리브 하의",
+            price: 18,
+            color: "#65724a",
+          },
+          {
+            id: "shoes_brown",
+            slot: "shoes",
+            name: "브라운 캠프화",
+            desc: "기본 신발",
+            price: 0,
+            color: "#a96835",
+          },
+          {
+            id: "shoes_sneakers",
+            slot: "shoes",
+            name: "크림 스니커즈",
+            desc: "귀여운 밝은 신발",
+            price: 14,
+            color: "#e8d8bd",
+          },
+          {
+            id: "shoes_boots",
+            slot: "shoes",
+            name: "초코 부츠",
+            desc: "숲길에 단단한 신발",
+            price: 20,
+            color: "#6a452e",
+          },
+        ];
+
+        const defaults = {
+          pines: 5,
+          fireLevel: 4,
+          radioNoise: false,
+          lampFlicker: false,
+          lampOn: true,
+          tentStage: 0,
+          owned: ["pants_cocoa", "shoes_brown"],
+          equipped: { pants: "pants_cocoa", shoes: "shoes_brown" },
+        };
+
+        const el = {
+          app: document.getElementById("app"),
+          stage: document.getElementById("stage"),
+          pineCount: document.getElementById("pineCount"),
+          fireImg: document.getElementById("fireImg"),
+          radioImg: document.getElementById("radioImg"),
+          lampImg: document.getElementById("lampImg"),
+          tentImg: document.getElementById("tentImg"),
+          statusCard: document.getElementById("statusCard"),
+          toast: document.getElementById("toast"),
+          shopBtn: document.getElementById("shopBtn"),
+          bagBtn: document.getElementById("bagBtn"),
+          modalLayer: document.getElementById("modalLayer"),
+          modalTitle: document.getElementById("modalTitle"),
+          modalBody: document.getElementById("modalBody"),
+          closeModalBtn: document.getElementById("closeModalBtn"),
+        };
+
+        let state = loadState();
+        let timers = {};
+        let audio = null;
+
+        function loadState() {
+          try {
+            return {
+              ...defaults,
+              ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"),
+            };
+          } catch {
+            return { ...defaults };
+          }
+        }
+
+        function saveState() {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function init() {
+          bindEvents();
+          render();
+          startTimers();
+          toast("스와이프 없이 탭으로 캠핑을 유지해요");
+        }
+
+        function bindEvents() {
+          document.querySelectorAll("[data-action]").forEach((button) => {
+            button.addEventListener("click", handleTap);
+          });
+          el.shopBtn.addEventListener("click", openShop);
+          el.bagBtn.addEventListener("click", openBag);
+          el.closeModalBtn.addEventListener("click", closeModal);
+          el.modalLayer.addEventListener("click", (event) => {
+            if (event.target === el.modalLayer) closeModal();
+          });
+          document.addEventListener("pointerdown", unlockAudio, { once: true });
+        }
+
+        function handleTap(event) {
+          const action = event.currentTarget.dataset.action;
+          event.currentTarget.classList.remove("flash");
+          void event.currentTarget.offsetWidth;
+          event.currentTarget.classList.add("flash");
+          unlockAudio();
+
+          if (action === "fire") {
+            const wasLow = state.fireLevel < 4;
+            state.fireLevel = 4;
+            reward(wasLow ? 2 : 1, "장작을 넣었어요");
+            playTone(168, 0.09, "sine");
+          }
+          if (action === "radio") {
+            state.radioNoise = false;
+            reward(2, "라디오를 조용히 맞췄어요");
+            radioWhisper(false);
+          }
+          if (action === "lamp") {
+            state.lampFlicker = false;
+            state.lampOn = true;
+            reward(2, "랜턴을 다시 밝혔어요");
+            playTone(620, 0.08, "sine");
+          }
+          if (action === "tent") {
+            const amount = state.tentStage > 1 ? 3 : 2;
+            state.tentStage = 0;
+            reward(amount, "텐트 지퍼를 닫았어요");
+            playTone(280, 0.08, "triangle");
+          }
+          saveState();
+          render();
+        }
+
+        function startTimers() {
+          clearInterval(timers.fire);
+          clearInterval(timers.events);
+          timers.fire = setInterval(decayFire, 18000);
+          timers.events = setInterval(tickEvents, 9500);
+        }
+
+        function decayFire() {
+          if (state.fireLevel <= 0) return;
+          state.fireLevel -= 1;
+          if (state.fireLevel === 1) toast("불빛이 약해져요");
+          if (state.fireLevel === 0) toast("모닥불이 꺼졌어요");
+          saveState();
+          render();
+        }
+
+        function tickEvents() {
+          const roll = Math.random();
+          if (roll < 0.34 && !state.radioNoise) {
+            state.radioNoise = true;
+            toast("라디오가 이상한 주파수를 잡았어요");
+            radioWhisper(true);
+          } else if (roll < 0.64 && !state.lampFlicker) {
+            state.lampFlicker = true;
+            toast("랜턴이 깜빡거려요");
+            setTimeout(() => {
+              if (!state.lampFlicker) return;
+              state.lampOn = false;
+              saveState();
+              render();
+              toast("랜턴이 꺼졌어요");
+            }, 7000);
+          } else if (state.tentStage < 3) {
+            state.tentStage += 1;
+            toast(
+              [
+                "텐트 지퍼 소리가 났어요",
+                "지퍼가 조금 열렸어요",
+                "텐트 안쪽이 보이기 시작했어요",
+              ][state.tentStage - 1],
+            );
+            playTone(230, 0.05, "triangle");
+          }
+          saveState();
+          render();
+        }
+
+        function reward(amount, message) {
+          state.pines += amount;
+          toast(`${message} +${amount} 솔방울`);
+        }
+
+        function render() {
+          el.pineCount.textContent = String(state.pines);
+          el.app.classList.toggle("fire-low", state.fireLevel <= 1);
+          el.app.classList.toggle("fire-out", state.fireLevel === 0);
+          el.app.classList.toggle("radio-noise", state.radioNoise);
+          el.app.classList.toggle(
+            "lamp-flicker",
+            state.lampFlicker && state.lampOn,
+          );
+          el.app.classList.toggle("lamp-off", !state.lampOn);
+          el.app.classList.toggle(
+            "tent-zip",
+            state.tentStage > 0 && state.tentStage < 3,
+          );
+
+          document.documentElement.style.setProperty(
+            "--fire-bright",
+            String(0.18 + state.fireLevel * 0.2),
+          );
+          el.fireImg.src =
+            state.fireLevel === 0
+              ? "assets/camp-game/fire/fire_out.png"
+              : state.fireLevel <= 2
+                ? "assets/camp-game/fire/fire_low.png"
+                : "assets/camp-game/fire/fire_big.png";
+          el.radioImg.src = "assets/camp-game/radio/radio.png";
+          el.lampImg.style.backgroundImage = state.lampOn
+            ? 'url("assets/camp-game/lamp/lamp_on.png")'
+            : 'url("assets/camp-game/lamp/lamp_off.png")';
+          el.tentImg.src =
+            state.tentStage === 3
+              ? "assets/camp-game/tent/tent_open.png"
+              : state.tentStage > 0
+                ? "assets/camp-game/tent/tent_open_50.png"
+                : "assets/camp-game/tent/tent_closed.png";
+
+          const pants = REWARDS.find(({ id }) => id === state.equipped.pants);
+          const shoes = REWARDS.find(({ id }) => id === state.equipped.shoes);
+          document.documentElement.style.setProperty("--pants", pants.color);
+          document.documentElement.style.setProperty("--shoe", shoes.color);
+
+          const status = [];
+          if (state.fireLevel <= 1) status.push("불");
+          if (state.radioNoise) status.push("라디오");
+          if (state.lampFlicker || !state.lampOn) status.push("랜턴");
+          if (state.tentStage > 0) status.push("텐트");
+          el.statusCard.textContent = status.length
+            ? `${status.join(", ")}를 탭해서 안정시키세요`
+            : "조용한데, 라디오가 가끔 이상해요";
+        }
+
+        function radioWhisper(on) {
+          if (on) {
+            playTone(80, 0.1, "sawtooth");
+            setTimeout(() => playTone(66, 0.12, "sawtooth"), 130);
+            return;
+          }
+          playTone(420, 0.06, "triangle");
+        }
+
+        function openShop() {
+          openRewardModal("상점", true);
+        }
+
+        function openBag() {
+          openRewardModal("가방", false);
+        }
+
+        function openRewardModal(title, canBuy) {
+          el.modalTitle.textContent = title;
+          el.modalBody.innerHTML = REWARDS.map((item) => {
+            const owned = state.owned.includes(item.id);
+            const equipped = state.equipped[item.slot] === item.id;
+            const label = equipped
+              ? "착용 중"
+              : owned
+                ? "착용"
+                : `${item.price} 솔방울`;
+            return `
+              <div class="item">
+                <div>
+                  <div class="item-name">${item.slot === "pants" ? "하의" : "신발"} · ${item.name}</div>
+                  <div class="item-desc">${item.desc}</div>
+                </div>
+                <button class="small-btn ${owned ? "" : "buy"}" data-item="${item.id}">
+                  ${label}
+                </button>
+              </div>
+            `;
+          }).join("");
+          el.modalBody.querySelectorAll("[data-item]").forEach((button) => {
+            button.addEventListener("click", () =>
+              applyReward(button.dataset.item, canBuy),
+            );
+          });
+          el.modalLayer.classList.add("show");
+          el.modalLayer.setAttribute("aria-hidden", "false");
+        }
+
+        function applyReward(itemId, canBuy) {
+          const item = REWARDS.find(({ id }) => id === itemId);
+          if (!state.owned.includes(item.id)) {
+            if (!canBuy) {
+              toast("상점에서 먼저 구매해요");
+              return;
+            }
+            if (state.pines < item.price) {
+              toast("솔방울이 부족해요");
+              return;
+            }
+            state.pines -= item.price;
+            state.owned.push(item.id);
+            toast("구매했어요");
+          }
+          state.equipped[item.slot] = item.id;
+          saveState();
+          render();
+          openRewardModal(el.modalTitle.textContent, canBuy);
+        }
+
+        function closeModal() {
+          el.modalLayer.classList.remove("show");
+          el.modalLayer.setAttribute("aria-hidden", "true");
+        }
+
+        function toast(message) {
+          el.toast.textContent = message;
+          el.toast.classList.add("show");
+          clearTimeout(timers.toast);
+          timers.toast = setTimeout(
+            () => el.toast.classList.remove("show"),
+            1700,
+          );
+        }
+
+        function unlockAudio() {
+          if (audio) return;
+          audio = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playTone(freq, duration, type) {
+          if (!audio) return;
+          const osc = audio.createOscillator();
+          const gain = audio.createGain();
+          osc.type = type;
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.001, audio.currentTime);
+          gain.gain.exponentialRampToValueAtTime(
+            0.045,
+            audio.currentTime + 0.01,
+          );
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audio.currentTime + duration,
+          );
+          osc.connect(gain);
+          gain.connect(audio.destination);
+          osc.start();
+          osc.stop(audio.currentTime + duration + 0.02);
+        }
+
+        init();
+      })();
+    </script>
+  </body>
+</html>

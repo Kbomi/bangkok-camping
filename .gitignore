@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.superpowers/
+.DS_Store
+**/.DS_Store
+.vite/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
